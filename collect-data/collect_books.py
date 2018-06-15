@@ -20,7 +20,7 @@ settings.SslSettings =
 client = new MongoClient(settings);
 
     
-db = client['bitmicro']
+db = client['coinprices']
 ltc_books = db[symbol+'_books']
 
 
