@@ -10,7 +10,16 @@ limit = 25
 book_url = '{0}/book/{1}usd?limit_bids={2}&limit_asks={2}'\
     .format(api, symbol, limit)
 
-client = MongoClient()
+string connectionString = 
+  @"mongodb://coinprices:yRxZPmafptESXYO1mrjrwyCKBURRFVeHxnXpjKGqXoZceffP2FuI2hAvtWUiKIuiKv0R2zqBIani5fkw3TipKw==@coinprices.documents.azure.com:10255/?ssl=true&replicaSet=globaldb";
+MongoClientSettings settings = MongoClientSettings.FromUrl(
+  new MongoUrl(connectionString)
+);
+settings.SslSettings = 
+  new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+client = new MongoClient(settings);
+
+    
 db = client['bitmicro']
 ltc_books = db[symbol+'_books']
 
@@ -19,7 +28,8 @@ def format_book_entry(entry):
     '''
     Converts book data to float
     '''
-    if all(key in entry for key in ('amount', 'price', 'timestamp')):
+    if all(key in entry for key in ('symbol','amount', 'price', 'timestamp')):
+        entry['symbol'] = symbol
         entry['amount'] = float(entry['amount'])
         entry['price'] = float(entry['price'])
         entry['timestamp'] = float(entry['timestamp'])
