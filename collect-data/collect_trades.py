@@ -1,4 +1,5 @@
-import urllib2
+#!/usr/bin/python3
+from urllib.request import urlopen
 import time
 import json
 from pymongo import MongoClient
@@ -8,14 +9,9 @@ api = 'https://api.bitfinex.com/v1'
 symbol = sys.argv[1]
 limit = 1000
 
-string connectionString = 
-  @"mongodb://coinprices:yRxZPmafptESXYO1mrjrwyCKBURRFVeHxnXpjKGqXoZceffP2FuI2hAvtWUiKIuiKv0R2zqBIani5fkw3TipKw==@coinprices.documents.azure.com:10255/?ssl=true&replicaSet=globaldb";
-MongoClientSettings settings = MongoClientSettings.FromUrl(
-  new MongoUrl(connectionString)
-);
-settings.SslSettings = 
-  new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
-client = new MongoClient(settings);
+uri = "mongodb://coinprices:yRxZPmafptESXYO1mrjrwyCKBURRFVeHxnXpjKGqXoZceffP2FuI2hAvtWUiKIuiKv0R2zqBIani5fkw3TipKw==@coinprices.documents.azure.com:10255/?ssl=true&replicaSet=globaldb"
+client = MongoClient(uri)
+
 
     
 db = client['coinprices']
@@ -28,8 +24,8 @@ def format_trade(trade):
     Formats trade data
     '''
     if all(key in trade for key in ('tid', 'symbol', 'amount', 'price', 'timestamp')):
-        trade['_id'] = trade.pop('tid')
-        trade['symbol] = symbol
+        trade['tid'] = trade.pop('tid')
+        trade['symbol'] = symbol
         trade['amount'] = float(trade['amount'])
         trade['price'] = float(trade['price'])
         trade['timestamp'] = float(trade['timestamp'])
@@ -41,11 +37,11 @@ def get_json(url):
     '''
     Gets json from the API
     '''
-    resp = urllib2.urlopen(url)
+    resp = urlopen(url)
     return json.load(resp, object_hook=format_trade), resp.getcode()
 
 
-print 'Running...'
+print('Running...')
 last_timestamp = 0
 while True:
     start = time.time()
@@ -53,15 +49,21 @@ while True:
         .format(api, symbol, last_timestamp, limit)
     try:
         trades, code = get_json(url)
+        print("running {}".format(start))
+        time.sleep(30)
     except Exception as e:
-        print e
+        print(e)
+        print(url)
+        time.sleep(60)
+        '''
         sys.exc_clear()
+        '''
     else:
         if code != 200:
-            print code
+            print(code)
         else:
             for trade in trades:
-                ltc_trades.update_one({'_id': trade['_id']},
+                ltc_trades.update_one({'tid': trade['tid']},
                                       {'$setOnInsert': trade}, upsert=True)
             last_timestamp = trades[0]['timestamp'] - 5
             time_delta = time.time()-start
