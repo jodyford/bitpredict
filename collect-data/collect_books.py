@@ -1,4 +1,5 @@
-import urllib2
+#!/usr/bin/python3
+from urllib.request import urlopen
 import time
 import json
 from pymongo import MongoClient
@@ -7,16 +8,15 @@ import sys
 api = 'https://api.bitfinex.com/v1'
 symbol = sys.argv[1]
 limit = 25
+
+
 book_url = '{0}/book/{1}usd?limit_bids={2}&limit_asks={2}'\
     .format(api, symbol, limit)
 
-string connectionString = 
-  @"mongodb://coinprices:yRxZPmafptESXYO1mrjrwyCKBURRFVeHxnXpjKGqXoZceffP2FuI2hAvtWUiKIuiKv0R2zqBIani5fkw3TipKw==@coinprices.documents.azure.com:10255/?ssl=true&replicaSet=globaldb";
-MongoClientSettings settings = MongoClientSettings.FromUrl(
-  new MongoUrl(connectionString)
-);
-settings.SslSettings = 
-  new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+string connectionString = @"mongodb://coinprices:yRxZPmafptESXYO1mrjrwyCKBURRFVeHxnXpjKGqXoZceffP2FuI2hAvtWUiKIuiKv0R2zqBIani5fkw3TipKw==@coinprices.documents.azure.com:10255/?ssl=true&replicaSet=globaldb";
+MongoClientSettings settings = MongoClientSettings.FromUrl(new MongoUrl(connectionString));
+settings.SslSettings = new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+
 client = new MongoClient(settings);
 
     
@@ -40,7 +40,7 @@ def get_json(url):
     '''
     Gets json from the API
     '''
-    resp = urllib2.urlopen(url)
+    resp = urlopen(url)
     return json.load(resp, object_hook=format_book_entry), resp.getcode()
 
 
@@ -49,14 +49,16 @@ while True:
     start = time.time()
     try:
         book, code = get_json(book_url)
+        time.sleep(30)
+        print("running {}").format(start)
     except Exception as e:
-        print e
-        sys.exc_clear()
+        print(e)
+        time.sleep(60)
     else:
         if code != 200:
-            print code
+            print(code)
         else:
-            book['_id'] = time.time()
+            book['tid'] = time.time()
             ltc_books.insert_one(book)
             time_delta = time.time()-start
             if time_delta < 1.0:
