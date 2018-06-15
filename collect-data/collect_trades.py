@@ -8,8 +8,18 @@ api = 'https://api.bitfinex.com/v1'
 symbol = sys.argv[1]
 limit = 1000
 
-client = MongoClient()
-db = client['bitmicro']
+string connectionString = 
+  @"mongodb://coinprices:yRxZPmafptESXYO1mrjrwyCKBURRFVeHxnXpjKGqXoZceffP2FuI2hAvtWUiKIuiKv0R2zqBIani5fkw3TipKw==@coinprices.documents.azure.com:10255/?ssl=true&replicaSet=globaldb";
+MongoClientSettings settings = MongoClientSettings.FromUrl(
+  new MongoUrl(connectionString)
+);
+settings.SslSettings = 
+  new SslSettings() { EnabledSslProtocols = SslProtocols.Tls12 };
+client = new MongoClient(settings);
+
+    
+db = client['coinprices']
+
 ltc_trades = db[symbol+'_trades']
 
 
@@ -17,8 +27,9 @@ def format_trade(trade):
     '''
     Formats trade data
     '''
-    if all(key in trade for key in ('tid', 'amount', 'price', 'timestamp')):
+    if all(key in trade for key in ('tid', 'symbol', 'amount', 'price', 'timestamp')):
         trade['_id'] = trade.pop('tid')
+        trade['symbol] = symbol
         trade['amount'] = float(trade['amount'])
         trade['price'] = float(trade['price'])
         trade['timestamp'] = float(trade['timestamp'])
